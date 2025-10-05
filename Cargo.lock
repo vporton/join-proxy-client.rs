@@ -462,6 +462,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "join-proxy-canister"
+version = "0.0.1"
+dependencies = [
+ "candid",
+ "ic-cdk",
+ "join-proxy-client",
+]
+
+[[package]]
 name = "join-proxy-client"
 version = "0.0.1"
 dependencies = [
@@ -472,15 +481,6 @@ dependencies = [
  "serde",
  "sha2",
  "url",
-]
-
-[[package]]
-name = "join-proxy-client-canister"
-version = "0.0.1"
-dependencies = [
- "candid",
- "ic-cdk",
- "join-proxy-client",
 ]
 
 [[package]]

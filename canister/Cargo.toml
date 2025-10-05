@@ -1,5 +1,5 @@
 [package]
-name = "join-proxy-client-canister"
+name = "join-proxy-canister"
 version = "0.0.1"
 edition = "2021"
 

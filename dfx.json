@@ -1,0 +1,21 @@
+{
+    "canisters": {
+        "backend": {
+            "candid": "canister/join_proxy_canister.did",
+            "type": "custom",
+            "shrink": true,
+            "gzip": true,
+            "wasm": "target/wasm32-unknown-unknown/release/join_proxy_canister.wasm",
+            "build": [
+                "cargo build --target wasm32-unknown-unknown --release -p join-proxy-canister",
+                "candid-extractor target/wasm32-unknown-unknown/release/join_proxy_canister.wasm > canister/join_proxy_canister.did"
+            ],
+            "metadata": [
+                {
+                    "name": "candid:service"
+                }
+            ]
+        }
+    },
+    "output_env_file": ".env"
+}
