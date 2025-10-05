@@ -100,7 +100,7 @@ impl HttpRequestsChecker {
     }
 
     /// Announce an HTTP request hash (for deduplication)
-    pub fn announce_http_request_hash(&mut self, hash: Vec<u8>, timeout: u64) {
+    fn announce_http_request_hash(&mut self, hash: Vec<u8>, timeout: u64) {
         self.delete_old_http_requests(timeout);
 
         // If there's an old hash equal to this, first delete it to clean times
@@ -182,7 +182,7 @@ impl HttpRequestsChecker {
     }
 
     /// Hash an HTTP request
-    pub fn hash_of_http_request(request: &HttpRequest) -> Vec<u8> {
+    pub fn hash_of_http_request(request: &HttpRequest) -> Vec<u8> { // TODO: `[u8; 32]` return type.
         let blob = Self::serialize_http_request(request);
         let mut hasher = Sha256::new();
         hasher.update(&blob);
@@ -267,10 +267,10 @@ impl HttpRequestsChecker {
                 .headers
                 .clone()
                 .into_iter()
-                .map(|(name, values)| ic_cdk::management_canister::HttpHeader {
-                    name,
-                    value: values.join(","), // FIXME: violation of HTTP specs
-                })
+                .map(|(name, values)| 
+                    values.into_iter().map(move |value| ic_cdk::management_canister::HttpHeader { name: name.clone(), value })
+                )
+                .flatten()
                 .collect(),
             body: request.body.clone().into(),
             transform: transform.clone(),
