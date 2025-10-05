@@ -246,7 +246,7 @@ impl HttpRequestsChecker {
                 .into_iter()
                 .map(|(name, values)| ic_cdk::management_canister::HttpHeader {
                     name,
-                    value: values.join(","),
+                    value: values.join(","), // FIXME: violation of HTTP specs
                 })
                 .collect(),
             body: request.body.clone().into(),
