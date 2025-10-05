@@ -2,10 +2,7 @@ use ic_cdk::call::Call;
 use ic_cdk::management_canister::TransformArgs;
 pub use ic_cdk::management_canister::{http_request, HttpHeader, HttpMethod, HttpRequestArgs, TransformContext};
 use ic_certified_map::{leaf_hash, AsHashTree, Hash, HashTree::{self, Leaf}};
-//::{
-// use ic_cdk_macros::{self, query, update};
 use serde::{Serialize, Deserialize};
-// use serde_json::{self, Value};
 
 use std::borrow::Cow;
 use std::collections::{HashMap, BTreeMap, BTreeSet};
