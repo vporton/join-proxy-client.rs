@@ -4,8 +4,8 @@ pub use ic_cdk::management_canister::{http_request, HttpHeader, HttpMethod, Http
 use ic_certified_map::{leaf_hash, AsHashTree, Hash, HashTree::{self, Leaf}};
 use serde::{Serialize, Deserialize};
 
-use std::borrow::Cow;
-use std::collections::{HashMap, BTreeMap, BTreeSet};
+use std::{borrow::Cow, collections::HashSet};
+use std::collections::{HashMap, BTreeMap};
 use std::fmt::Display;
 use std::time::{SystemTime, UNIX_EPOCH};
 use sha2::{Sha256, Digest};
@@ -58,7 +58,7 @@ pub struct HttpRequestsChecker {
     /// Map from request hash to timestamp
     hashes: ic_certified_map::RbTree<Vec<u8>, MyTime>,
     /// Map from timestamp to set of request hashes
-    times: BTreeMap<MyTime, BTreeSet<Vec<u8>>>, // TODO: use `HashSet` for the inner?
+    times: BTreeMap<MyTime, HashSet<Vec<u8>>>, // TODO: use `HashSet` for the inner?
 }
 
 impl HttpRequestsChecker {
@@ -119,7 +119,7 @@ impl HttpRequestsChecker {
 
         // Insert into both maps
         self.hashes.insert(hash.clone(), now);
-        self.times.entry(now).or_insert_with(BTreeSet::new).insert(hash);
+        self.times.entry(now).or_insert_with(HashSet::new).insert(hash);
     }
 
     /// Announce an HTTP request (for deduplication)
