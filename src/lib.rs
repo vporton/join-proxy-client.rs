@@ -1,4 +1,4 @@
-use ic_cdk::call::Call;
+use ic_cdk::{api::certified_data_set, call::Call};
 use ic_cdk::management_canister::TransformArgs;
 pub use ic_cdk::management_canister::{http_request, HttpHeader, HttpMethod, HttpRequestArgs, TransformContext};
 use ic_certified_map::{leaf_hash, AsHashTree, Hash, HashTree::{self, Leaf}};
@@ -64,10 +64,12 @@ pub struct HttpRequestsChecker {
 impl HttpRequestsChecker {
     /// Create a new HTTP requests checker
     pub fn new() -> Self {
-        Self {
+        let res = Self {
             hashes: ic_certified_map::RbTree::new(),
             times: BTreeMap::new(),
-        }
+        };
+        certified_data_set(&res.hashes.root_hash()); // TODO: Needed?
+        res
     }
 
     /// Get current timestamp in nanoseconds
@@ -120,6 +122,7 @@ impl HttpRequestsChecker {
         // Insert into both maps
         self.hashes.insert(hash.clone(), now);
         self.times.entry(now).or_insert_with(HashSet::new).insert(hash);
+        certified_data_set(&self.hashes.root_hash());
     }
 
     /// Announce an HTTP request (for deduplication)
