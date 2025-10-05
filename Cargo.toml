@@ -1,25 +1,4 @@
-[package]
-name = "join-proxy-client"
-version = "0.0.1"
-edition = "2024"
+[workspace]
+members = ["lib"]
 
-[lib]
-name = "join_proxy_client"
-path = "src/lib.rs"
-
-[[example]]
-name = "test"
-path = "examples/test.rs"
-
-[dependencies]
-sha2 = "0.10"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tokio = { version = "1.0", features = ["full"] }
-chrono = { version = "0.4", features = ["serde"] }
-url = "2.4"
-ic-cdk = "0.18.7"
-ic-cdk-macros = "0.18.7"
-candid = "0.10.19"
-ic-certified-map = "0.4.1"
-base64 = "0.22.1"
+resolver = "2"
