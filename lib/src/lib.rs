@@ -4,7 +4,7 @@ use ic_cdk::management_canister::TransformArgs;
 pub use ic_cdk::management_canister::{http_request, HttpHeader, HttpMethod, HttpRequestArgs, TransformContext};
 use ic_certified_map::{leaf_hash, AsHashTree, Hash, HashTree::{self, Leaf}};
 use serde::{Serialize, Deserialize};
-
+use candid::CandidType;
 use std::{borrow::Cow, collections::HashSet};
 use std::collections::{HashMap, BTreeMap};
 use std::fmt::Display;
@@ -25,7 +25,7 @@ pub struct HttpRequest {
 }
 
 /// HTTP response payload (simplified for this conversion)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(CandidType, Debug, Clone, Serialize, Deserialize)]
 pub struct HttpResponsePayload {
     pub status: candid::Nat,
     pub headers: Vec<(String, String)>,
@@ -314,24 +314,15 @@ impl HttpRequestsChecker {
 }
 
 /// Parameters for HTTP requests
-#[derive(Debug, Clone)]
+#[derive(CandidType, Serialize, Deserialize, Debug, Clone)]
 pub struct HttpRequestParams {
     pub cycles: u64,
     pub timeout: u64,
     pub max_response_bytes: Option<u64>,
 }
 
-/// Wrapped HTTP request with shared headers
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WrappedHttpRequest {
-    pub method: HttpMethod,
-    pub headers: HttpHeaders,
-    pub url: String,
-    pub body: Vec<u8>,
-}
-
 /// Shared wrapped HTTP request with array-based headers
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(CandidType, Debug, Clone, Serialize, Deserialize)]
 pub struct SharedWrappedHttpRequest {
     pub method: HttpMethod,
     pub headers: Vec<(String, Vec<String>)>,

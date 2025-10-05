@@ -1,6 +1,47 @@
-#[ic_cdk::query]
-fn greet(name: String) -> String {
-    format!("Hello, {}!", name)
+use ic_cdk::{api::{self, canister_self, management_canister::http_request::HttpHeader}, management_canister::TransformFunc, query, update};
+use join_proxy_client::{HttpRequestParams, HttpRequestsChecker, HttpResponsePayload, SharedWrappedHttpRequest, TransformContext};
+use ic_cdk::management_canister::TransformArgs;
+use serde::{Serialize, Deserialize};
+// use std::thread::thread_local;
+
+thread_local! {
+    static requests_checker: HttpRequestsChecker = HttpRequestsChecker::new();
+}
+
+// #[derive(Deserialize)]
+// struct CallHttpParams {
+//     cycles: candid::Nat,
+//     timeout: candid::Nat,
+//     max_response_bytes: Option<u64>,
+// }
+
+#[update]
+async fn call_http(
+    request: SharedWrappedHttpRequest,
+    params: HttpRequestParams,
+    config_id: String,
+) -> HttpResponsePayload {
+    requests_checker.with(|c|
+        c.checked_http_request_wrapped(
+            request,
+            Some(TransformContext {
+                function: TransformFunc(candid::Func{principal: canister_self(), method: "transform".to_strng()}),
+                context: Vec::new(),
+            }),
+            params,
+            config_id,
+        )
+    ).await.unwrap()
+}
+
+#[query]
+fn transform(args: TransformArgs) -> HttpResponsePayload {
+    let headers = args.response.headers.into_iter().filter(|h: &join_proxy_client::HttpHeader| h.name != "date").collect::<Vec<_>>();
+    HttpResponsePayload {
+        status: args.response.status,
+        headers,
+        body: args.response.body,
+    }
 }
 
 ic_cdk::export_candid!();

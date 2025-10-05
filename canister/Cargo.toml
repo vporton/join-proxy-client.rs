@@ -10,6 +10,6 @@ crate-type = ["cdylib"]
 join-proxy-client = { path = "../lib" }
 candid = "0.10.10"
 ic-cdk = "0.18.7"
-
+serde = "1.0.228"
 #[dev-dependencies]
 #pocket-ic = "7.0.0"

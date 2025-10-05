@@ -468,6 +468,7 @@ dependencies = [
  "candid",
  "ic-cdk",
  "join-proxy-client",
+ "serde",
 ]
 
 [[package]]
