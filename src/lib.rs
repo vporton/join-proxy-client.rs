@@ -1,3 +1,4 @@
+use base64::{Engine, engine::general_purpose::URL_SAFE};
 use ic_cdk::{api::certified_data_set, call::Call};
 use ic_cdk::management_canister::TransformArgs;
 pub use ic_cdk::management_canister::{http_request, HttpHeader, HttpMethod, HttpRequestArgs, TransformContext};
@@ -210,7 +211,7 @@ impl HttpRequestsChecker {
     }
 
     /// Modify HTTP request to add standard headers
-    pub fn modify_http_request(request: &mut HttpRequest) {
+    pub fn modify_http_request(request: &mut HttpRequest, config_id: String) {
         Self::headers_to_lowercase(&mut request.headers);
 
         // Add content-length if body is not empty
@@ -250,6 +251,8 @@ impl HttpRequestsChecker {
                 }
             }
         }
+
+        request.headers.entry("x-config".to_string()).and_modify(|c| c.push(config_id.clone())).or_insert(vec![config_id]);
     }
 
     /// Make a checked HTTP request with deduplication
@@ -258,9 +261,16 @@ impl HttpRequestsChecker {
         request: &mut HttpRequest,
         transform: Option<TransformContext>,
         params: HttpRequestParams,
+        config_id: String,
     ) -> Result<HttpResponsePayload, Box<dyn std::error::Error + Send + Sync>> {
-        Self::modify_http_request(request);
+        Self::modify_http_request(request, config_id);
         self.announce_http_request(request, params.timeout);
+
+        let cert = ic_cdk::api::data_certificate().unwrap();
+        let cert = URL_SAFE.encode(cert);
+        // Remove the following header in the proxy before hashing.
+        // TODO: `to_string` and `clone()` are inefficient.
+        request.headers.entry("x-cert".to_string()).and_modify(|c| c.push(cert.clone())).or_insert(vec![cert]);
 
         // Execute request // TODO: Get rid of `clone()`?
         let response = http_request(&HttpRequestArgs  {
@@ -336,6 +346,7 @@ impl HttpRequestsChecker {
         request: SharedWrappedHttpRequest,
         transform: Option<TransformContext>,
         params: HttpRequestParams,
+        config_id: String,
     ) -> Result<HttpResponsePayload, Box<dyn std::error::Error + Send + Sync>> {
         let mut http_request = HttpRequest {
             method: request.method,
@@ -344,7 +355,7 @@ impl HttpRequestsChecker {
             body: request.body,
         };
 
-        self.checked_http_request(&mut http_request, transform, params).await
+        self.checked_http_request(&mut http_request, transform, params, config_id).await
     }
 
     /// Create new headers map

@@ -36,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Request exists after announcing: {}", checker.check_http_request(&hash));
     
     // Test HTTP request modification
-    HttpRequestsChecker::modify_http_request(&mut request);
+    HttpRequestsChecker::modify_http_request(&mut request, "xxx".to_string());
     println!("Modified request headers: {:?}", request.headers);
     
     // Test making an actual HTTP request (commented out to avoid network dependency in tests)
