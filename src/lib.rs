@@ -1,3 +1,5 @@
+use ic_cdk::call::Call;
+use ic_cdk::management_canister::TransformArgs;
 pub use ic_cdk::management_canister::{http_request, HttpHeader, HttpMethod, HttpRequestArgs, TransformContext};//::{
 // use ic_cdk_macros::{self, query, update};
 use serde::{Serialize, Deserialize};
@@ -27,9 +29,6 @@ pub struct HttpResponsePayload {
     pub headers: Vec<(String, String)>,
     pub body: Vec<u8>,
 }
-
-/// Transform function type for HTTP responses
-pub type TransformRawResponseFunction = TransformContext; // TODO: Rename superfluous type?
 
 /// HTTP requests checker for deduplication
 #[derive(Debug, Clone)]
@@ -230,7 +229,7 @@ impl HttpRequestsChecker {
     pub async fn checked_http_request(
         &mut self,
         request: &mut HttpRequest,
-        transform: Option<TransformRawResponseFunction>,
+        transform: Option<TransformContext>,
         params: HttpRequestParams,
     ) -> Result<HttpResponsePayload, Box<dyn std::error::Error + Send + Sync>> {
         Self::modify_http_request(request);
@@ -253,24 +252,28 @@ impl HttpRequestsChecker {
             transform: transform.clone(),
             max_response_bytes: params.max_response_bytes,
         }).await?;
+
+        // Apply transform if provided
+        if let Some(transform_fn) = transform {
+            // FIXME: unbounded
+            // TODO: `clone` here seems inefficient but inevitable. Any solution?
+            Call::unbounded_wait(transform_fn.function.0.principal, &transform_fn.function.0.method)
+                .with_arg(TransformArgs { response: response.clone(), context: transform_fn.context })
+                .await?;
+        }
+
         let status = response.status;
+
         let headers: Vec<(String, String)> = response
             .headers
             .iter()
             .map(|HttpHeader {name, value}| (name.to_string(), value.to_string()))
             .collect();
         
-        let /*mut*/ body = response.body;
-        
-        // Apply transform if provided
-        if let Some(_transform_fn) = &transform {
-            // body = (transform_fn.function)(body); // FIXME
-        }
-
         Ok(HttpResponsePayload {
             status,
             headers,
-            body,
+            body: response.body,
         })
     }
 }
@@ -306,7 +309,7 @@ impl HttpRequestsChecker {
     pub async fn checked_http_request_wrapped(
         &mut self,
         request: SharedWrappedHttpRequest,
-        transform: Option<TransformRawResponseFunction>,
+        transform: Option<TransformContext>,
         params: HttpRequestParams,
     ) -> Result<HttpResponsePayload, Box<dyn std::error::Error + Send + Sync>> {
         let mut http_request = HttpRequest {
