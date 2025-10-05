@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+
 use ic_cdk::{api::{self, canister_self, management_canister::http_request::HttpHeader}, management_canister::TransformFunc, query, update};
 use join_proxy_client::{HttpRequestParams, HttpRequestsChecker, HttpResponsePayload, SharedWrappedHttpRequest, TransformContext};
 use ic_cdk::management_canister::TransformArgs;
@@ -5,7 +7,7 @@ use serde::{Serialize, Deserialize};
 // use std::thread::thread_local;
 
 thread_local! {
-    static requests_checker: HttpRequestsChecker = HttpRequestsChecker::new();
+    static requests_checker: RefCell<HttpRequestsChecker> = RefCell::new(HttpRequestsChecker::new());
 }
 
 // #[derive(Deserialize)]
@@ -21,16 +23,16 @@ async fn call_http(
     params: HttpRequestParams,
     config_id: String,
 ) -> HttpResponsePayload {
-    requests_checker.with(|c|
+    requests_checker.with_borrow_mut(async |c|
         c.checked_http_request_wrapped(
             request,
             Some(TransformContext {
-                function: TransformFunc(candid::Func{principal: canister_self(), method: "transform".to_strng()}),
+                function: TransformFunc(candid::Func{principal: canister_self(), method: "transform".to_string()}),
                 context: Vec::new(),
             }),
             params,
             config_id,
-        )
+        ).await
     ).await.unwrap()
 }
 

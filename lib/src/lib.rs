@@ -28,7 +28,7 @@ pub struct HttpRequest {
 #[derive(CandidType, Debug, Clone, Serialize, Deserialize)]
 pub struct HttpResponsePayload {
     pub status: candid::Nat,
-    pub headers: Vec<(String, String)>,
+    pub headers: Vec<HttpHeader>,
     pub body: Vec<u8>,
 }
 
@@ -299,10 +299,9 @@ impl HttpRequestsChecker {
                 .await?;
         }
 
-        let headers: Vec<(String, String)> = response
+        let headers: Vec<_> = response
             .headers
-            .iter()
-            .map(|HttpHeader {name, value}| (name.to_string(), value.to_string()))
+            .into_iter()
             .collect();
         
         Ok(HttpResponsePayload {
