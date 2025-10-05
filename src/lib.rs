@@ -1,7 +1,7 @@
 use ic_cdk::call::Call;
 use ic_cdk::management_canister::TransformArgs;
 pub use ic_cdk::management_canister::{http_request, HttpHeader, HttpMethod, HttpRequestArgs, TransformContext};
-use ic_certified_map::{leaf_hash, AsHashTree, Hash, HashTree, Leaf};
+use ic_certified_map::{leaf_hash, AsHashTree, Hash, HashTree::{self, Leaf}};
 //::{
 // use ic_cdk_macros::{self, query, update};
 use serde::{Serialize, Deserialize};
@@ -34,7 +34,7 @@ pub struct HttpResponsePayload {
     pub body: Vec<u8>,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 struct MyTime(u64);
 
 impl Display for MyTime {
@@ -50,7 +50,7 @@ impl AsHashTree for MyTime {
     }
 
     fn as_hash_tree(&self) -> HashTree<'_> {
-        Leaf(Cow::from(&Sha256::digest(self.0.to_le_bytes()).to_vec()))
+        Leaf(Cow::from(Sha256::digest(self.0.to_le_bytes()).to_vec()))
     }
 }
 
@@ -68,22 +68,24 @@ impl HttpRequestsChecker {
     /// Create a new HTTP requests checker
     pub fn new() -> Self {
         Self {
-            hashes: HashMap::new(),
+            hashes: ic_certified_map::RbTree::new(),
             times: BTreeMap::new(),
         }
     }
 
     /// Get current timestamp in nanoseconds
-    fn now() -> u64 {
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos() as u64
+    fn now() -> MyTime {
+        MyTime(
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos() as u64
+        )
     }
 
     /// Delete old HTTP requests based on timeout
     fn delete_old_http_requests(&mut self, timeout: u64) {
-        let threshold = Self::now() - timeout * 1_000_000_000; // Convert to nanoseconds
+        let threshold = MyTime(Self::now().0 - timeout * 1_000_000_000); // Convert to nanoseconds
         
         while let Some((&min_time, hashes)) = self.times.first_key_value() {
             if min_time > threshold {
@@ -92,7 +94,7 @@ impl HttpRequestsChecker {
             
             // Remove all hashes for this timestamp
             for hash in hashes {
-                self.hashes.remove(hash);
+                self.hashes.delete(hash);
             }
             
             // Remove the timestamp entry
@@ -106,7 +108,7 @@ impl HttpRequestsChecker {
 
         // If there's an old hash equal to this, first delete it to clean times
         if let Some(old_time) = self.hashes.get(&hash).copied() {
-            self.hashes.remove(&hash);
+            self.hashes.delete(&hash);
             
             if let Some(subtree) = self.times.get_mut(&old_time) {
                 subtree.remove(&hash);
@@ -131,7 +133,7 @@ impl HttpRequestsChecker {
 
     /// Check if an HTTP request hash exists
     pub fn check_http_request(&self, hash: &[u8]) -> bool {
-        self.hashes.contains_key(hash)
+        self.hashes.get(hash).is_some()
     }
 
     /// Convert HTTP method to string
