@@ -1,0 +1,15 @@
+[package]
+name = "join-proxy-client-canister"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+join-proxy-client = { path = "../lib" }
+candid = "0.10.10"
+ic-cdk = "0.18.7"
+
+#[dev-dependencies]
+#pocket-ic = "7.0.0"

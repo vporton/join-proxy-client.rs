@@ -475,6 +475,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "join-proxy-client-canister"
+version = "0.0.1"
+dependencies = [
+ "candid",
+ "ic-cdk",
+ "join-proxy-client",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

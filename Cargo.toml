@@ -1,4 +1,4 @@
 [workspace]
-members = ["lib"]
+members = ["lib", "canister"]
 
 resolver = "2"
