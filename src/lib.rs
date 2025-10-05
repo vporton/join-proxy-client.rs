@@ -111,7 +111,7 @@ impl HttpRequestsChecker {
 
     /// Convert HTTP method to string
     fn http_method_to_text(method: &HttpMethod) -> &'static str {
-        match method { // TODO: Can be simplified using `serialize()`?
+        match method {
             HttpMethod::GET => "GET",
             HttpMethod::POST => "POST",
             HttpMethod::HEAD => "HEAD",
