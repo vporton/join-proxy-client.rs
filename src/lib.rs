@@ -1,11 +1,15 @@
 use ic_cdk::call::Call;
 use ic_cdk::management_canister::TransformArgs;
-pub use ic_cdk::management_canister::{http_request, HttpHeader, HttpMethod, HttpRequestArgs, TransformContext};//::{
+pub use ic_cdk::management_canister::{http_request, HttpHeader, HttpMethod, HttpRequestArgs, TransformContext};
+use ic_certified_map::{leaf_hash, AsHashTree, Hash, HashTree, Leaf};
+//::{
 // use ic_cdk_macros::{self, query, update};
 use serde::{Serialize, Deserialize};
 // use serde_json::{self, Value};
 
+use std::borrow::Cow;
 use std::collections::{HashMap, BTreeMap, BTreeSet};
+use std::fmt::Display;
 use std::time::{SystemTime, UNIX_EPOCH};
 use sha2::{Sha256, Digest};
 use url::Url;
@@ -30,13 +34,34 @@ pub struct HttpResponsePayload {
     pub body: Vec<u8>,
 }
 
+#[derive(Clone, Copy, Debug)]
+struct MyTime(u64);
+
+impl Display for MyTime {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+// TODO: Need Sha256?
+impl AsHashTree for MyTime {
+    fn root_hash(&self) -> Hash {
+        leaf_hash(&Sha256::digest(self.0.to_le_bytes()))
+    }
+
+    fn as_hash_tree(&self) -> HashTree<'_> {
+        Leaf(Cow::from(&Sha256::digest(self.0.to_le_bytes()).to_vec()))
+    }
+}
+
+
 /// HTTP requests checker for deduplication
 #[derive(Debug, Clone)]
 pub struct HttpRequestsChecker {
     /// Map from request hash to timestamp
-    hashes: HashMap<Vec<u8>, i64>,
+    hashes: ic_certified_map::RbTree<Vec<u8>, MyTime>,
     /// Map from timestamp to set of request hashes
-    times: BTreeMap<i64, BTreeSet<Vec<u8>>>,
+    times: BTreeMap<MyTime, BTreeSet<Vec<u8>>>, // TODO: use `HashSet` for the inner?
 }
 
 impl HttpRequestsChecker {
@@ -49,16 +74,16 @@ impl HttpRequestsChecker {
     }
 
     /// Get current timestamp in nanoseconds
-    fn now() -> i64 {
+    fn now() -> u64 {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_nanos() as i64
+            .as_nanos() as u64
     }
 
     /// Delete old HTTP requests based on timeout
     fn delete_old_http_requests(&mut self, timeout: u64) {
-        let threshold = Self::now() - (timeout as i64 * 1_000_000_000); // Convert to nanoseconds
+        let threshold = Self::now() - timeout * 1_000_000_000; // Convert to nanoseconds
         
         while let Some((&min_time, hashes)) = self.times.first_key_value() {
             if min_time > threshold {
