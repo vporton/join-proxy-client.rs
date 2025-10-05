@@ -262,8 +262,6 @@ impl HttpRequestsChecker {
                 .await?;
         }
 
-        let status = response.status;
-
         let headers: Vec<(String, String)> = response
             .headers
             .iter()
@@ -271,7 +269,7 @@ impl HttpRequestsChecker {
             .collect();
         
         Ok(HttpResponsePayload {
-            status,
+            status: response.status,
             headers,
             body: response.body,
         })
