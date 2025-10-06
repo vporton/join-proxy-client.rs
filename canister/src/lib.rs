@@ -11,13 +11,6 @@ use static_init::{dynamic};
 #[thread_local]
 static REQUESTS_CHECKER: RefCell<HttpRequestsChecker> = RefCell::new(HttpRequestsChecker::new());
 
-// #[derive(Deserialize)]
-// struct CallHttpParams {
-//     cycles: candid::Nat,
-//     timeout: candid::Nat,
-//     max_response_bytes: Option<u64>,
-// }
-
 #[update]
 async fn call_http(
     request: SharedWrappedHttpRequest,
