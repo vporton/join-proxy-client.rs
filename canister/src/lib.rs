@@ -31,6 +31,7 @@ async fn call_http(
 
 #[query]
 fn transform(args: TransformArgs) -> HttpResponsePayload {
+    // TODO: Date should instead be removed by the server config.
     let headers = args.response.headers.into_iter().filter(|h: &join_proxy_client::HttpHeader| h.name != "date").collect::<Vec<_>>();
     HttpResponsePayload {
         status: args.response.status,
