@@ -1,16 +1,15 @@
 #![feature(thread_local)]
-use std::{cell::RefCell, sync::Arc};
+use std::cell::RefCell;
 
-use ic_cdk::{api::{self, canister_self, management_canister::http_request::HttpHeader}, management_canister::TransformFunc, query, update};
+use ic_cdk::{api::canister_self, management_canister::TransformFunc, query, update};
 use join_proxy_client::{HttpRequestParams, HttpRequestsChecker, HttpResponsePayload, SharedWrappedHttpRequest, TransformContext};
 use ic_cdk::management_canister::TransformArgs;
-use serde::{Serialize, Deserialize};
 use static_init::{dynamic};
 
 // TODO: Save/restore it on upgrade.
 #[dynamic]
 #[thread_local]
-static requests_checker: RefCell<HttpRequestsChecker> = RefCell::new(HttpRequestsChecker::new());
+static REQUESTS_CHECKER: RefCell<HttpRequestsChecker> = RefCell::new(HttpRequestsChecker::new());
 
 // #[derive(Deserialize)]
 // struct CallHttpParams {
@@ -25,7 +24,7 @@ async fn call_http(
     params: HttpRequestParams,
     config_id: String,
 ) -> HttpResponsePayload {
-    let mut c = requests_checker.borrow_mut();
+    let mut c = REQUESTS_CHECKER.borrow_mut();
     c.checked_http_request_wrapped(
         request,
         Some(TransformContext {
