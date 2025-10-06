@@ -283,6 +283,7 @@ impl HttpRequestsChecker {
         }).await?;
 
         // Apply transform if provided
+        // FIXME: Why us, not the management canister calls it? Seems wrong.
         if let Some(transform_fn) = transform {
             // FIXME: unbounded
             // TODO: `clone` here seems inefficient but inevitable. Any solution?
