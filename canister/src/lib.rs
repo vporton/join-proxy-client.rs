@@ -7,6 +7,7 @@ use ic_cdk::management_canister::TransformArgs;
 use serde::{Serialize, Deserialize};
 use static_init::{dynamic};
 
+// TODO: Save/restore it on upgrade.
 #[dynamic]
 #[thread_local]
 static requests_checker: RefCell<HttpRequestsChecker> = RefCell::new(HttpRequestsChecker::new());
