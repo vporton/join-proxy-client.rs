@@ -1,7 +1,7 @@
 use base64::{Engine, engine::general_purpose::URL_SAFE};
 use ic_cdk::{api::certified_data_set, call::Call};
 use ic_cdk::management_canister::TransformArgs;
-pub use ic_cdk::management_canister::{http_request, HttpHeader, HttpMethod, HttpRequestArgs, TransformContext};
+pub use ic_cdk::management_canister::{http_request, HttpHeader, HttpMethod, HttpRequestArgs, HttpRequestResult, TransformContext};
 use ic_certified_map::{leaf_hash, AsHashTree, Hash, HashTree::{self, Leaf}};
 use serde::{Serialize, Deserialize};
 use candid::CandidType;
@@ -21,14 +21,6 @@ pub struct HttpRequest {
     pub method: HttpMethod,
     pub headers: HttpHeaders,
     pub url: String,
-    pub body: Vec<u8>,
-}
-
-/// HTTP response payload (simplified for this conversion)
-#[derive(CandidType, Debug, Clone, Serialize, Deserialize)]
-pub struct HttpResponsePayload {
-    pub status: candid::Nat,
-    pub headers: Vec<HttpHeader>,
     pub body: Vec<u8>,
 }
 
@@ -262,7 +254,7 @@ impl HttpRequestsChecker {
         transform: Option<TransformContext>,
         params: HttpRequestParams,
         config_id: String,
-    ) -> Result<HttpResponsePayload, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<HttpRequestResult, Box<dyn std::error::Error + Send + Sync>> {
         Self::modify_http_request(request, config_id);
         self.announce_http_request(request, params.timeout);
 
@@ -304,7 +296,7 @@ impl HttpRequestsChecker {
             .into_iter()
             .collect();
         
-        Ok(HttpResponsePayload {
+        Ok(HttpRequestResult {
             status: response.status,
             headers,
             body: response.body,
@@ -337,7 +329,7 @@ impl HttpRequestsChecker {
         transform: Option<TransformContext>,
         params: HttpRequestParams,
         config_id: String,
-    ) -> Result<HttpResponsePayload, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<HttpRequestResult, Box<dyn std::error::Error + Send + Sync>> {
         let mut http_request = HttpRequest {
             method: request.method,
             headers: request.headers.into_iter().collect(),
