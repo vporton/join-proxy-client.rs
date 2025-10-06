@@ -51,7 +51,7 @@ pub struct HttpRequestsChecker {
     /// Map from request hash to timestamp
     hashes: ic_certified_map::RbTree<Vec<u8>, MyTime>,
     /// Map from timestamp to set of request hashes
-    times: BTreeMap<MyTime, HashSet<Vec<u8>>>, // TODO: use `HashSet` for the inner?
+    times: BTreeMap<MyTime, HashSet<Vec<u8>>>,
 }
 
 impl HttpRequestsChecker {
