@@ -291,6 +291,7 @@ impl HttpRequestsChecker {
         }).await?;
 
         // Apply transform if provided
+        // FIXME: Why do I call `unbounded_wait` from **client**?!
         if let Some(transform_fn) = transform {
             // FIXME: unbounded
             // TODO: `clone` here seems inefficient but inevitable. Any solution?
