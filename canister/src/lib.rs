@@ -17,7 +17,7 @@ async fn call_http(
     params: HttpRequestParams,
     config_id: String,
 ) -> HttpResponsePayload {
-    let mut c = REQUESTS_CHECKER.borrow_mut();
+    let mut c: std::cell::RefMut<'_, HttpRequestsChecker> = REQUESTS_CHECKER.borrow_mut();
     c.checked_http_request_wrapped(
         request,
         Some(TransformContext {
@@ -26,7 +26,7 @@ async fn call_http(
         }),
         params,
         config_id,
-    ).await.unwrap()
+    ).await.unwrap() // TODO: `unwrap`
 }
 
 #[query]
