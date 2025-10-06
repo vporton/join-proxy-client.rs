@@ -11,5 +11,7 @@ join-proxy-client = { path = "../lib" }
 candid = "0.10.10"
 ic-cdk = "0.18.7"
 serde = "1.0.228"
+static_init = "1.0.4"
+
 #[dev-dependencies]
 #pocket-ic = "7.0.0"
