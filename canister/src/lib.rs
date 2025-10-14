@@ -18,6 +18,7 @@ async fn call_http(
     config_id: String,
 ) -> HttpRequestResult {
     let mut c: std::cell::RefMut<'_, HttpRequestsChecker> = REQUESTS_CHECKER.borrow_mut();
+    // FIXME: Here it's claimed that this is an error: https://forum.dfinity.org/t/my-rust-code-doesnt-compile-i-dont-know-what-to-do/58500/3?u=qwertytrewq
     c.checked_http_request_wrapped(
         request,
         Some(TransformContext {
