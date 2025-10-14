@@ -258,7 +258,7 @@ impl HttpRequestsChecker {
         Self::modify_http_request(request, config_id);
         self.announce_http_request(request, params.timeout);
 
-        let cert = ic_cdk::api::data_certificate().unwrap();
+        let cert = ic_cdk::api::data_certificate().unwrap(); // FIXME: Must be called from a query call.
         let cert = URL_SAFE.encode(cert);
         // Remove the following header in the proxy before hashing.
         // TODO: `to_string` and `clone()` are inefficient.
